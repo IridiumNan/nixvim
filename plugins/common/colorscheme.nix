@@ -2,7 +2,7 @@
 {
   colorschemes = {
     kanagawa = {
-      enable = true;
+      enable = false;
       settings = {
         colors.theme.all.ui.bg_gutter = "none";
         undercurl = true;
@@ -67,21 +67,21 @@
   };
 
   colorschemes.tokyonight = {
-    enable = false;
+    enable = true;
     settings = {
-      style = "night";
-      transparent = config.nvix.transparent;
-      styles = {
-        floats = if config.nvix.transparent then "transparent" else "dark";
-        sidebars = if config.nvix.transparent then "transparent" else "dark";
-        comments.italic = true;
-        functions.italic = true;
-        variables.italic = true;
-        keywords = {
-          italic = true;
-          bold = true;
-        };
-      };
+      style = "moon";
+      # transparent = config.nvix.transparent;
+      # styles = {
+      #   floats = if config.nvix.transparent then "transparent" else "dark";
+      #   sidebars = if config.nvix.transparent then "transparent" else "dark";
+      #   comments.italic = true;
+      #   functions.italic = true;
+      #   variables.italic = true;
+      #   keywords = {
+      #     italic = true;
+      #     bold = true;
+      #   };
+      # };
     };
   };
 }
