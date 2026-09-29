@@ -97,6 +97,16 @@ Exceptions:
 - `pylsp` - enabled without `package = null` (nixvim builds custom derivation)
 - `vue_ls` / `volar` - TS integrations disabled (assert `package != null`)
 
+## Live file watching
+
+`plugins/common/default.nix` watches every open normal file with a libuv
+`fs_event` and runs `:checktime` on change, so external edits (git,
+formatters, AI edit tools) show up in the buffer without refocusing.
+Buffers with unsaved changes are never touched. Atomic writers replace
+files via rename, which orphans the watch - the watcher re-arms itself
+on rename events to keep tracking the file at that path. `autoread` plus
+a `FocusGained` → `checktime` autocmd act as fallback on focus return.
+
 ## Overlays
 
 `overlays/default.nix` patches `kulala-core` to fix a hardcoded WASM
