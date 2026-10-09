@@ -168,34 +168,44 @@ in
             _G._nvix_watchers = {}
           end
 
-          -- Stop existing watcher for this buffer
-          if _G._nvix_watchers[bufnr] then
-            _G._nvix_watchers[bufnr]:stop()
-            _G._nvix_watchers[bufnr] = nil
-          end
-
           local uv = vim.uv or vim.loop
-          local watcher = uv.new_fs_event()
-          if not watcher then return end
 
-          _G._nvix_watchers[bufnr] = watcher
+          local function watch()
+            -- Stop existing watcher for this buffer
+            if _G._nvix_watchers[bufnr] then
+              _G._nvix_watchers[bufnr]:stop()
+              _G._nvix_watchers[bufnr] = nil
+            end
 
-          local function on_change(err, fname, status)
-            if err then return end
-            vim.schedule(function()
-              -- Double-check buffer is still valid and unmodified
-              if vim.api.nvim_buf_is_valid(bufnr) and not vim.bo[bufnr].modified then
-                vim.api.nvim_buf_call(bufnr, function()
-                  vim.cmd('checktime')
-                end)
-              end
+            local watcher = uv.new_fs_event()
+            if not watcher then return end
+
+            _G._nvix_watchers[bufnr] = watcher
+
+            local function on_change(err, fname, status)
+              if err then return end
+              vim.schedule(function()
+                -- rename-replace (atomic writes: git, formatters, llm tools)
+                -- orphans the watch; re-arm on the file now at this path
+                if status and status.rename and vim.api.nvim_buf_is_valid(bufnr) then
+                  watch()
+                end
+                -- Double-check buffer is still valid and unmodified
+                if vim.api.nvim_buf_is_valid(bufnr) and not vim.bo[bufnr].modified then
+                  vim.api.nvim_buf_call(bufnr, function()
+                    vim.cmd('checktime')
+                  end)
+                end
+              end)
+            end
+
+            -- Try watching the file directly
+            pcall(function()
+              watcher:start(filepath, {}, on_change)
             end)
           end
 
-          -- Try watching the file directly
-          pcall(function()
-            watcher:start(filepath, {}, on_change)
-          end)
+          watch()
 
           -- Cleanup when buffer is deleted
           vim.api.nvim_create_autocmd("BufDelete", {
